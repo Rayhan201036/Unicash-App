@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transaction Receipt</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Noto Sans Myanmar', Arial, sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 600px;
+    width: 100%;
+  }
+  .card {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+  h2 { text-align: center; color: #007bff; margin-bottom: 15px; }
+  .receipt-details div { margin-bottom: 10px; font-size: 16px; }
+  strong { color: #333; }
+  button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin: 12px 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  #paymentBtn { background-color: #007bff; }
+  #downloadBtn { background-color: #28a745; }
+  .notice { color: red; font-weight: bold; text-align: center; line-height: 1.5; margin-bottom: 10px; }
+  .contact { display: flex; justify-content: center; align-items: center; gap: 6px; font-weight: bold; margin-top: 10px; }
+  .contact img { width:20px; height:20px; }
+  .contact a { text-decoration:none; color:#25D366; display:flex; align-items:center; gap:6px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- UPPER CARD: Receipt details + Download PDF -->
+  <div class="card" id="pdfContent">
+    <h2>🧾 Transaction Receipt</h2>
+    <div class="receipt-details">
+      <div>Receipt Code: <strong id="receiptCode">-</strong></div>
+      <div>Sender: <strong id="senderName">-</strong> (<span id="senderPhone">-</span>)</div>
+      <div>Receiver: <strong id="receiverName">-</strong> (<span id="receiverPhone">-</span>)</div>
+      <div>Account/Bank Number: <strong id="accountNumber">-</strong></div>
+      <div>Transfer Type: <strong id="transferType">-</strong></div>
+      <div>City: <strong id="city">-</strong></div>
+      <div>Amount (MYR): <strong id="amount">-</strong></div>
+      <div>Total (MYR): <strong id="total">-</strong></div>
+      <div>Exchange Rate: <strong id="exchangeRate">-</strong></div>
+      <div>MMK Received: <strong id="mmkAmount">-</strong></div>
+    </div>
+    <button id="downloadBtn">📄 Download PDF</button>
+  </div>
+
+  <!-- LOWER CARD: Notice + Payment + WhatsApp -->
+  <div class="card">
+    <div class="notice">
+      ⚠️ ဤပြေစာကို ဒေါင်းလုတ်လုပ်၍ ဒါမှမဟုတ် စကရင်ရှော့ဖြင့် ယူပြီး ဌာနသို့ ပေးပို့ပါ။<br>
+      ဌာနနံပါတ်: 01141384625<br>
+      အသုံးပြုသူအမည်: Mohammad Rafi
+    </div>
+    <button id="paymentBtn">💰 Make Payment to Department</button>
+    <div class="contact">
+      <a href="https://wa.me/601136196645" target="_blank">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp Logo">
+        01141384625
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+const txn = transactions.length > 0 ? transactions[transactions.length - 1] : {
+  receiptCode: "RC12345",
+  senderName: "Rayhan",
+  senderPhone: "0123456789",
+  receiverName: "Rafi",
+  receiverPhone: "01136196645",
+  accountNumber: "123456789",
+  walletType: "Bank Transfer",
+  city: "Kuala Lumpur",
+  amount: 100,
+  total: 102,
+  exchangeRate: 500,
+  mmkAmount: 51000
+};
+
+// Fill receipt fields
+document.getElementById("receiptCode").textContent = txn.receiptCode;
+document.getElementById("senderName").textContent = txn.senderName;
+document.getElementById("senderPhone").textContent = txn.senderPhone;
+document.getElementById("receiverName").textContent = txn.receiverName;
+document.getElementById("receiverPhone").textContent = txn.receiverPhone;
+document.getElementById("accountNumber").textContent = txn.accountNumber;
+document.getElementById("transferType").textContent = txn.walletType;
+document.getElementById("city").textContent = txn.city;
+document.getElementById("amount").textContent = "RM " + txn.amount.toFixed(2);
+document.getElementById("total").textContent = "RM " + txn.total.toFixed(2);
+document.getElementById("exchangeRate").textContent = `1 MYR = ${txn.exchangeRate} MMK`;
+document.getElementById("mmkAmount").textContent = txn.mmkAmount.toLocaleString() + " MMK";
+
+// Payment button link
+document.getElementById("paymentBtn").addEventListener("click", function() {
+  window.location.href = "payment.html";
+});
+
+// PDF Download (text-based, not screenshot)
+document.getElementById("downloadBtn").addEventListener("click", function() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+
+  let y = 40;
+  doc.setFontSize(18);
+  doc.text("Transaction Receipt", 210, y, {align:"center"});
+  doc.setFontSize(12);
+  y += 30;
+
+  const lines = [
+    `Receipt Code: ${txn.receiptCode}`,
+    `Sender: ${txn.senderName} (${txn.senderPhone})`,
+    `Receiver: ${txn.receiverName} (${txn.receiverPhone})`,
+    `Account/Bank Number: ${txn.accountNumber}`,
+    `Transfer Type: ${txn.walletType}`,
+    `City: ${txn.city}`,
+    `Amount (MYR): RM ${txn.amount.toFixed(2)}`,
+    `Total (MYR): RM ${txn.total.toFixed(2)}`,
+    `Exchange Rate: 1 MYR = ${txn.exchangeRate} MMK`,
+    `MMK Received: ${txn.mmkAmount.toLocaleString()} MMK`
+  ];
+
+  lines.forEach(line => {
+    doc.text(line, 40, y);
+    y += 20;
+  });
+
+  doc.save(`${txn.receiptCode || "receipt"}.pdf`);
+});
+</script>
+
+</body>
+</html>
